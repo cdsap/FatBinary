@@ -1,0 +1,38 @@
+ml
+workspace.xml
+
+# Ruby / Danger files
+vendor/
+
+# built application files
+*.ap_
+
+# files for the dex VM
+*.dex
+
+# Java class files
+*.class
+
+# Mac files.
+.DS_Store
+
+# generated files
+out
+bin/
+gen/
+captures/
+fastlane/*
+scripts/changelog*
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Eclipse project files
+.classpath
+.project
+encodings.xml
+vcs.xml
+
+build
+.gradle
+.idea
