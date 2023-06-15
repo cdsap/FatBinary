@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "io.github.cdsap"
-version = "1.0-SNAPSHOT"
+version = "1.0"
 
 
 gradlePlugin {
