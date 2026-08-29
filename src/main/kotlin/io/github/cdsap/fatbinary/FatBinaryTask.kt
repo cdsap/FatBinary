@@ -20,8 +20,7 @@ open class FatBinaryTask : DefaultTask() {
         outputFile.get().asFile.apply {
             parentFile.mkdirs()
             delete()
-            writeText("#!/bin/sh\n\nexec java \$JAVA_OPTS -jar \$0 \"\$@\"\n\n")
-            appendBytes(fileJar.asFile.readBytes())
+            writeBytes(BinaryLauncher.assemble(fileJar.asFile.readBytes()))
             setExecutable(true)
         }
     }
