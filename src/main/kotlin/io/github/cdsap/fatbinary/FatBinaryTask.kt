@@ -16,12 +16,9 @@ open class FatBinaryTask : DefaultTask() {
 
     @TaskAction
     fun buildBinary() {
-        val fileJar = fatJar.get()
-        outputFile.get().asFile.apply {
-            parentFile.mkdirs()
-            delete()
-            writeBytes(BinaryLauncher.assemble(fileJar.asFile.readBytes()))
-            setExecutable(true)
-        }
+        ExecutableBinaryWriter.write(
+            jarFile = fatJar.get().asFile,
+            outputFile = outputFile.get().asFile
+        )
     }
 }
