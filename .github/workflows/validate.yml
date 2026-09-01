@@ -41,3 +41,55 @@ jobs:
 
       - name: Run checks
         run: ./gradlew check validatePlugins
+
+  cli:
+    name: CLI binary (JDK ${{ matrix.java-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java-version:
+          - 17
+          - 19
+          - 21
+          - 23
+          - 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK for plugin publish and binary build
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Publish plugin to mavenLocal
+        run: ./gradlew publishToMavenLocal
+
+      - name: Build fat binary from e2e consumer
+        working-directory: e2e/consumer
+        run: ../../gradlew fatBinary
+
+      - name: Set up JDK ${{ matrix.java-version }} for CLI execution
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java-version }}
+
+      - name: Execute fat binary (TaskReport-style CLI smoke)
+        working-directory: e2e/consumer
+        shell: bash
+        run: |
+          set -euo pipefail
+          java -version
+          output="$(./fatbinary-e2e)"
+          echo "$output"
+          echo "$output" | grep -q "FatBinary e2e OK" \
+            || { echo "::error::CLI binary did not print expected marker"; exit 1; }
+          echo "$output" | grep -q "java.version=" \
+            || { echo "::error::CLI binary did not print java.version"; exit 1; }
