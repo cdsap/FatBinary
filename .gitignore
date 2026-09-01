@@ -36,3 +36,8 @@ vcs.xml
 build
 .gradle
 .idea
+.kotlin
+
+# e2e fat binary produced at the consumer project root
+e2e/consumer/fatbinary-e2e
+e2e/consumer/.gradle
