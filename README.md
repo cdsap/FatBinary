@@ -7,7 +7,7 @@ A common use case is to generate tooling from jvm projects that could be portabl
 Include plugin in your root build.gradle(kts) file:
 ```
 plugins {
-  id("io.github.cdsap.fatbinary") version "1.0"
+  id("io.github.cdsap.fatbinary") version "1.1.0"
 }
 ```
 Defines the main class of the application and the binary name
@@ -21,6 +21,19 @@ fatBinary {
 Finally execute the binary:
 ```
 ./binary
+```
+
+### Local CLI matrix
+Publish the plugin locally, build the e2e consumer binary, and smoke-test it (TaskReport-style):
+
+```
+./scripts/test-cli-matrix.sh
+```
+
+To exercise multiple JDKs on your machine, pass their `JAVA_HOME` paths:
+
+```
+./scripts/test-cli-matrix.sh "$JAVA_HOME" /path/to/jdk-21 /path/to/jdk-25
 ```
 
 ### Implementation
