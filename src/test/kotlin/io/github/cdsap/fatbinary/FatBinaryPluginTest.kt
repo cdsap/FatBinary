@@ -1,10 +1,13 @@
 package io.github.cdsap.fatbinary
 
 import org.gradle.testkit.runner.GradleRunner
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.util.jar.JarFile
 
 
 class FatBinaryPluginTest {
@@ -15,6 +18,78 @@ class FatBinaryPluginTest {
 
     @Test
     fun testPluginIsProperlyApplied() {
+        writeBuildFile(
+            """
+                fatBinary {
+                    mainClass = "com.example.Main"
+                    name = "binary"
+                }
+            """.trimIndent()
+        )
+        writeMainSource()
+
+        GradleRunner.create()
+            .withProjectDir(testProjectDir.root)
+            .withArguments("fatBinary")
+            .withPluginClasspath()
+            .build()
+
+        assertTrue(File("${testProjectDir.root}/binary").exists())
+    }
+
+    @Test
+    fun fatJarWritesConfiguredMainClassToManifest() {
+        writeBuildFile(
+            """
+                fatBinary {
+                    mainClass = "com.example.Main"
+                    name = "binary"
+                }
+            """.trimIndent()
+        )
+        writeMainSource()
+
+        GradleRunner.create()
+            .withProjectDir(testProjectDir.root)
+            .withArguments("fatJar")
+            .withPluginClasspath()
+            .build()
+
+        val jarFile = File(testProjectDir.root, "build/libs")
+            .listFiles()
+            ?.single { it.extension == "jar" }
+            ?: error("Expected fatJar output in build/libs")
+
+        JarFile(jarFile).use { jar ->
+            assertEquals(
+                "com.example.MainKt",
+                jar.manifest.mainAttributes.getValue("Main-Class")
+            )
+        }
+    }
+
+    @Test
+    fun fatBinaryDefaultsToBuildDirProjectNameWhenNameIsEmpty() {
+        writeBuildFile(
+            """
+                fatBinary {
+                    mainClass = "com.example.Main"
+                }
+            """.trimIndent()
+        )
+        writeMainSource()
+
+        GradleRunner.create()
+            .withProjectDir(testProjectDir.root)
+            .withArguments("fatBinary")
+            .withPluginClasspath()
+            .build()
+
+        val defaultOutput = File(testProjectDir.root, "build/${testProjectDir.root.name}")
+        assertTrue(defaultOutput.exists())
+    }
+
+    private fun writeBuildFile(fatBinaryBlock: String) {
         testProjectDir.newFile("build.gradle").appendText(
             """
                 plugins {
@@ -25,13 +100,13 @@ class FatBinaryPluginTest {
                     mavenCentral()
                 }
 
-                fatBinary {
-                mainClass = "com.example.Main"
-                name = "binary"
-                }
+                $fatBinaryBlock
 
             """.trimIndent()
         )
+    }
+
+    private fun writeMainSource() {
         testProjectDir.newFolder("src", "main", "kotlin", "com", "example")
         testProjectDir.newFile("src/main/kotlin/com/example/Main.kt").appendText(
             """
@@ -41,11 +116,5 @@ class FatBinaryPluginTest {
                 }
             """.trimIndent()
         )
-        GradleRunner.create()
-            .withProjectDir(testProjectDir.root)
-            .withArguments("fatBinary")
-            .withPluginClasspath()
-            .build()
-        assert(File("${testProjectDir.root}/binary").exists())
     }
 }

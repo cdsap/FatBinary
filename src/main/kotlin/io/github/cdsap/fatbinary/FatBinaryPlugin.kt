@@ -7,14 +7,13 @@ import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.attributes
 import org.gradle.kotlin.dsl.get
-import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.register
 import java.io.File
 
 class FatBinaryPlugin : Plugin<Project> {
 
     override fun apply(target: Project) {
-        target.extensions.create("fatBinary", FatBinaryExtension::class.java)
+        val extension = target.extensions.create("fatBinary", FatBinaryExtension::class.java)
 
         val fatJarProvider = target.tasks.register<Jar>("fatJar") {
             duplicatesStrategy = DuplicatesStrategy.INCLUDE
@@ -24,7 +23,7 @@ class FatBinaryPlugin : Plugin<Project> {
             dependsOn(target.tasks.named("jar"))
 
             manifest {
-                attributes("Main-Class" to "${project.extensions.getByType<FatBinaryExtension>().mainClass}Kt")
+                attributes("Main-Class" to resolveManifestMainClass(extension))
             }
 
             inputs.files(target.configurations.getByName("runtimeClasspath"))
@@ -41,13 +40,17 @@ class FatBinaryPlugin : Plugin<Project> {
             dependsOn(fatJarProvider)
 
             this.fatJar.set(fatJarProvider.get().archiveFile)
-
-            if(project.extensions.getByType<FatBinaryExtension>().name.isNotEmpty()){
-                this.outputFile.set(File(project.extensions.getByType<FatBinaryExtension>().name))
-            } else {
-                this.outputFile.set(File("${project.buildDir}/${project.name}"))
-            }
-
+            this.outputFile.set(resolveOutputFile(extension, project))
         }
     }
+
+    private fun resolveManifestMainClass(extension: FatBinaryExtension): String =
+        "${extension.mainClass}Kt"
+
+    private fun resolveOutputFile(extension: FatBinaryExtension, project: Project): File =
+        if (extension.name.isNotEmpty()) {
+            File(extension.name)
+        } else {
+            File("${project.buildDir}/${project.name}")
+        }
 }
