@@ -1,31 +1,33 @@
+import org.gradle.plugin.compatibility.compatibility
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     `java-gradle-plugin`
     `kotlin-dsl`
-    id("com.gradle.plugin-publish") version "1.0.0-rc-1"
+    id("com.gradle.plugin-publish") version "2.1.1"
 }
 
 group = "io.github.cdsap"
 version = "1.1.0"
 
-
 gradlePlugin {
+    website.set("https://github.com/cdsap/FatBinary")
+    vcsUrl.set("https://github.com/cdsap/FatBinary")
     plugins {
         create("FatBinaryPlugin") {
             id = "io.github.cdsap.fatbinary"
             displayName = "FatBinary executables"
             description = "Creates an executable binary with all the dependencies"
             implementationClass = "io.github.cdsap.fatbinary.FatBinaryPlugin"
+            tags.set(listOf("binary", "executable"))
+            compatibility {
+                features {
+                    configurationCache = true
+                }
+            }
         }
     }
-}
-
-pluginBundle {
-    website = "https://github.com/cdsap/FatBinary"
-    vcsUrl = "https://github.com/cdsap/FatBinary"
-    tags = listOf("binary", "executable")
 }
 
 repositories {
