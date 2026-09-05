@@ -22,7 +22,7 @@ class FatBinaryPlugin : Plugin<Project> {
             dependsOn(target.tasks.named("jar"))
 
             manifest {
-                attributes("Main-Class" to resolveManifestMainClass(extension))
+                attributes("Main-Class" to FatBinaryNaming.manifestMainClass(extension.mainClass))
             }
 
             inputs.files(target.configurations.getByName("runtimeClasspath"))
@@ -40,15 +40,12 @@ class FatBinaryPlugin : Plugin<Project> {
 
             this.fatJar.set(fatJarProvider.get().archiveFile)
             this.outputFile.set(
-                FatBinaryOutput.resolve(
-                    projectName = project.name,
+                FatBinaryNaming.outputFile(
+                    name = extension.name,
                     buildDir = project.buildDir,
-                    configuredName = extension.name
+                    projectName = project.name
                 )
             )
         }
     }
-
-    private fun resolveManifestMainClass(extension: FatBinaryExtension): String =
-        "${extension.mainClass}Kt"
 }
