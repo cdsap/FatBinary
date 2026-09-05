@@ -40,10 +40,10 @@ class FatBinaryPlugin : Plugin<Project> {
 
             this.fatJar.set(fatJarProvider.get().archiveFile)
             this.outputFile.set(
-                FatBinaryNaming.outputFile(
-                    name = extension.name,
-                    buildDir = project.buildDir,
-                    projectName = project.name
+                FatBinaryOutputPath.resolve(
+                    configuredName = extension.name,
+                    projectName = project.name,
+                    buildDir = project.buildDir
                 )
             )
         }
