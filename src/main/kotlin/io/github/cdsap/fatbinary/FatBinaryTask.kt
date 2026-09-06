@@ -16,8 +16,10 @@ open class FatBinaryTask : DefaultTask() {
 
     @TaskAction
     fun buildBinary() {
+        val jarBytes = fatJar.get().asFile.readBytes()
+        val binaryBytes = BinaryLauncher.assemble(jarBytes)
         ExecutableBinaryWriter.write(
-            jarFile = fatJar.get().asFile,
+            bytes = binaryBytes,
             outputFile = outputFile.get().asFile
         )
     }
