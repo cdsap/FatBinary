@@ -4,16 +4,16 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.io.File
 
-class FatBinaryOutputPathTest {
+class FatBinaryOutputFileResolverTest {
 
     @Test
     fun resolveUsesConfiguredNameWhenPresent() {
         val buildDir = File("/tmp/build")
 
-        val output = FatBinaryOutputPath.resolve(
+        val output = FatBinaryOutputFileResolver.resolve(
             configuredName = "binary",
-            projectName = "demo",
-            buildDir = buildDir
+            buildDir = buildDir,
+            projectName = "demo"
         )
 
         assertEquals(File("binary"), output)
@@ -23,12 +23,12 @@ class FatBinaryOutputPathTest {
     fun resolveDefaultsToBuildDirProjectNameWhenNameIsEmpty() {
         val buildDir = File("/tmp/build")
 
-        val output = FatBinaryOutputPath.resolve(
+        val output = FatBinaryOutputFileResolver.resolve(
             configuredName = "",
-            projectName = "demo",
-            buildDir = buildDir
+            buildDir = buildDir,
+            projectName = "demo"
         )
 
-        assertEquals(File("${buildDir}/demo"), output)
+        assertEquals(File(buildDir, "demo"), output)
     }
 }
