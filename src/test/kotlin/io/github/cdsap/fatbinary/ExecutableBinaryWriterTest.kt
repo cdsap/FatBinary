@@ -14,17 +14,14 @@ class ExecutableBinaryWriterTest {
     val tempFolder = TemporaryFolder()
 
     @Test
-    fun writeCreatesParentDirectoriesAssemblesBytesAndMarksExecutable() {
-        val jarFile = tempFolder.newFile("input.jar")
-        val jarBytes = byteArrayOf(0x50, 0x4B, 0x03, 0x04)
-        jarFile.writeBytes(jarBytes)
-
+    fun writeCreatesParentDirectoriesWritesBytesAndMarksExecutable() {
+        val bytes = byteArrayOf(0x23, 0x21, 0x2F, 0x62, 0x69, 0x6E, 0x2F)
         val outputFile = File(tempFolder.root, "nested/out/binary")
 
-        ExecutableBinaryWriter.write(jarFile, outputFile)
+        ExecutableBinaryWriter.write(bytes, outputFile)
 
         assertTrue(outputFile.parentFile.exists())
-        assertArrayEquals(BinaryLauncher.assemble(jarBytes), outputFile.readBytes())
+        assertArrayEquals(bytes, outputFile.readBytes())
         assertTrue(outputFile.canExecute())
     }
 }

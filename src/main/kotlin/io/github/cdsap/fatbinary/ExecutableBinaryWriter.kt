@@ -4,10 +4,10 @@ import java.io.File
 
 internal object ExecutableBinaryWriter {
 
-    fun write(jarFile: File, outputFile: File) {
+    fun write(bytes: ByteArray, outputFile: File) {
         outputFile.parentFile.mkdirs()
         outputFile.delete()
-        outputFile.writeBytes(BinaryLauncher.assemble(jarFile.readBytes()))
+        outputFile.writeBytes(bytes)
         outputFile.setExecutable(true)
     }
 }
