@@ -38,7 +38,7 @@ class FatBinaryPlugin : Plugin<Project> {
 
             dependsOn(fatJarProvider)
 
-            this.fatJar.set(fatJarProvider.get().archiveFile)
+            this.fatJar.set(fatJarProvider.flatMap { it.archiveFile })
             this.outputFile.set(
                 FatBinaryOutputFileResolver.resolve(
                     configuredName = extension.name,

@@ -1,7 +1,9 @@
 package io.github.cdsap.fatbinary
 
+import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -15,6 +17,28 @@ class FatBinaryPluginTest {
     @Rule
     @JvmField
     val testProjectDir = TemporaryFolder()
+
+    @Test
+    fun fatBinaryWiresFatJarLazilyWithoutRealizingIt() {
+        val project = ProjectBuilder.builder().build()
+        project.pluginManager.apply("java")
+        project.pluginManager.apply(FatBinaryPlugin::class.java)
+        val extension = project.extensions.getByType(FatBinaryExtension::class.java)
+        extension.mainClass = "com.example.Main"
+        extension.name = "binary"
+
+        var fatJarConfigured = false
+        project.tasks.named("fatJar").configure {
+            fatJarConfigured = true
+        }
+
+        project.tasks.named("fatBinary", FatBinaryTask::class.java).get()
+
+        assertFalse(
+            "fatJar must stay unrealized while configuring fatBinary",
+            fatJarConfigured
+        )
+    }
 
     @Test
     fun testPluginIsProperlyApplied() {
