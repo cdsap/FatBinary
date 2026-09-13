@@ -43,6 +43,30 @@ class FatBinaryPluginTest {
     }
 
     @Test
+    fun registersTasksWhenFatBinaryIsAppliedBeforeJava() {
+        val project = ProjectBuilder.builder().build()
+        project.pluginManager.apply(FatBinaryPlugin::class.java)
+        project.pluginManager.apply("java")
+
+        val extension = project.extensions.getByType(FatBinaryExtension::class.java)
+        extension.mainClass = "com.example.Main"
+        extension.name = "binary"
+
+        assertTrue(project.tasks.names.contains("fatJar"))
+        assertTrue(project.tasks.names.contains("fatBinary"))
+
+        var fatJarConfigured = false
+        project.tasks.named("fatJar").configure {
+            fatJarConfigured = true
+        }
+        project.tasks.named("fatBinary", FatBinaryTask::class.java).get()
+        assertFalse(
+            "fatJar must stay unrealized while configuring fatBinary",
+            fatJarConfigured
+        )
+    }
+
+    @Test
     fun fatJarAndFatBinaryReadFromSingleCapturedExtensionInstance() {
         val project = ProjectBuilder.builder().build()
         project.pluginManager.apply("java")
@@ -67,6 +91,22 @@ class FatBinaryPluginTest {
         val fatBinary = project.tasks.named("fatBinary", FatBinaryTask::class.java).get()
         assertEquals(
             project.file("owned-binary"),
+            fatBinary.outputFile.get().asFile
+        )
+    }
+
+    @Test
+    fun fatBinaryResolvesDefaultOutputThroughProjectLayoutAfterExtensionConfigured() {
+        val project = ProjectBuilder.builder().withName("layout-demo").build()
+        project.pluginManager.apply("java")
+        project.pluginManager.apply(FatBinaryPlugin::class.java)
+
+        val extension = project.extensions.getByType(FatBinaryExtension::class.java)
+        extension.mainClass = "com.example.Main"
+
+        val fatBinary = project.tasks.named("fatBinary", FatBinaryTask::class.java).get()
+        assertEquals(
+            project.layout.buildDirectory.file(project.name).get().asFile,
             fatBinary.outputFile.get().asFile
         )
     }
