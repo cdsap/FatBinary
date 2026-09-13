@@ -1,9 +1,11 @@
 package io.github.cdsap.fatbinary
 
+import org.gradle.jvm.tasks.Jar
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -37,6 +39,35 @@ class FatBinaryPluginTest {
         assertFalse(
             "fatJar must stay unrealized while configuring fatBinary",
             fatJarConfigured
+        )
+    }
+
+    @Test
+    fun fatJarAndFatBinaryReadFromSingleCapturedExtensionInstance() {
+        val project = ProjectBuilder.builder().build()
+        project.pluginManager.apply("java")
+        project.pluginManager.apply(FatBinaryPlugin::class.java)
+
+        val extension = project.extensions.getByType(FatBinaryExtension::class.java)
+        assertSame(
+            "plugin must expose the same FatBinaryExtension instance created at apply",
+            extension,
+            project.extensions.getByName("fatBinary")
+        )
+
+        extension.mainClass = "com.example.Owned"
+        extension.name = "owned-binary"
+
+        val fatJar = project.tasks.named("fatJar", Jar::class.java).get()
+        assertEquals(
+            "com.example.OwnedKt",
+            fatJar.manifest.attributes.get("Main-Class")
+        )
+
+        val fatBinary = project.tasks.named("fatBinary", FatBinaryTask::class.java).get()
+        assertEquals(
+            project.file("owned-binary"),
+            fatBinary.outputFile.get().asFile
         )
     }
 
