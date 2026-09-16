@@ -30,7 +30,7 @@ class FatBinaryPlugin : Plugin<Project> {
 
                 inputs.files(runtimeClasspath)
                 from(runtimeClasspath.map { configuration ->
-                    configuration.map { if (it.isDirectory) it else project.zipTree(it) }
+                    configuration.map { if (it.isDirectory) it else target.zipTree(it) }
                 })
                 with(jarProvider.get() as CopySpec)
             }
@@ -43,12 +43,12 @@ class FatBinaryPlugin : Plugin<Project> {
 
                 this.fatJar.set(fatJarProvider.flatMap { it.archiveFile })
                 this.outputFile.set(
-                    project.layout.file(
-                        project.provider {
+                    target.layout.file(
+                        target.provider {
                             FatBinaryOutputFileResolver.resolve(
                                 configuredName = extension.name,
-                                buildDir = project.layout.buildDirectory.get().asFile,
-                                projectName = project.name
+                                buildDir = target.layout.buildDirectory.get().asFile,
+                                projectName = target.name
                             )
                         }
                     )

@@ -67,14 +67,14 @@ class FatBinaryPluginTest {
     }
 
     @Test
-    fun fatJarAndFatBinaryReadFromSingleCapturedExtensionInstance() {
-        val project = ProjectBuilder.builder().build()
+    fun fatJarAndFatBinaryReadFromSingleCapturedExtensionOnApplyTarget() {
+        val project = ProjectBuilder.builder().withName("apply-target").build()
         project.pluginManager.apply("java")
         project.pluginManager.apply(FatBinaryPlugin::class.java)
 
         val extension = project.extensions.getByType(FatBinaryExtension::class.java)
         assertSame(
-            "plugin must expose the same FatBinaryExtension instance created at apply",
+            "plugin must reuse the FatBinaryExtension instance from target.extensions.create",
             extension,
             project.extensions.getByName("fatBinary")
         )
@@ -84,13 +84,22 @@ class FatBinaryPluginTest {
 
         val fatJar = project.tasks.named("fatJar", Jar::class.java).get()
         assertEquals(
+            "manifest must read mainClass from the captured extension",
             "com.example.OwnedKt",
             fatJar.manifest.attributes.get("Main-Class")
         )
 
         val fatBinary = project.tasks.named("fatBinary", FatBinaryTask::class.java).get()
         assertEquals(
+            "output path must resolve through the apply target project",
             project.file("owned-binary"),
+            fatBinary.outputFile.get().asFile
+        )
+
+        extension.name = ""
+        assertEquals(
+            "empty name must keep default output under the apply target build directory",
+            project.layout.buildDirectory.file(project.name).get().asFile,
             fatBinary.outputFile.get().asFile
         )
     }
