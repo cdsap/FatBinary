@@ -34,11 +34,22 @@ class FatBinaryPluginTest {
             fatJarConfigured = true
         }
 
-        project.tasks.named("fatBinary", FatBinaryTask::class.java).get()
+        val fatBinary = project.tasks.named("fatBinary", FatBinaryTask::class.java).get()
 
         assertFalse(
             "fatJar must stay unrealized while configuring fatBinary",
             fatJarConfigured
+        )
+        assertTrue(
+            "fatBinary must remain dependent on fatJar",
+            fatBinary.taskDependencies.getDependencies(fatBinary).any { it.name == "fatJar" }
+        )
+
+        val fatJar = project.tasks.named("fatJar", Jar::class.java).get()
+        assertEquals(
+            "fatBinary.fatJar must track fatJar.archiveFile through a lazy provider",
+            fatJar.archiveFile.get().asFile,
+            fatBinary.fatJar.get().asFile
         )
     }
 
