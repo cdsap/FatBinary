@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     `java-gradle-plugin`
     `kotlin-dsl`
-    id("com.gradle.plugin-publish") version "2.1.1"
+    id("com.gradle.plugin-publish") version "2.2.1"
 }
 
 group = "io.github.cdsap"
@@ -24,6 +24,7 @@ gradlePlugin {
             compatibility {
                 features {
                     configurationCache = true
+                    isolatedProjects = true
                 }
             }
         }
