@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "io.github.cdsap"
-version = "1.1.0"
+version = "1.1.1"
 
 gradlePlugin {
     website.set("https://github.com/cdsap/FatBinary")
