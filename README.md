@@ -7,7 +7,7 @@ A common use case is to generate tooling from jvm projects that could be portabl
 Include plugin in your root build.gradle(kts) file:
 ```
 plugins {
-  id("io.github.cdsap.fatbinary") version "1.1.0"
+  id("io.github.cdsap.fatbinary") version "1.1.1"
 }
 ```
 Defines the main class of the application and the binary name
