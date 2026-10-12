@@ -1,5 +1,7 @@
 package io.github.cdsap.fatbinary
 
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.OutputFile
 import org.gradle.jvm.tasks.Jar
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.testkit.runner.GradleRunner
@@ -11,6 +13,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.lang.reflect.Modifier
 import java.util.jar.JarFile
 
 
@@ -19,6 +22,22 @@ class FatBinaryPluginTest {
     @Rule
     @JvmField
     val testProjectDir = TemporaryFolder()
+
+    @Test
+    fun fatBinaryTaskUsesAbstractGradleManagedProperties() {
+        assertTrue(Modifier.isAbstract(FatBinaryTask::class.java.modifiers))
+        assertTrue(
+            FatBinaryTask::class.java.getMethod("getFatJar")
+                .isAnnotationPresent(InputFile::class.java)
+        )
+        assertTrue(
+            FatBinaryTask::class.java.getMethod("getOutputFile")
+                .isAnnotationPresent(OutputFile::class.java)
+        )
+
+        val project = ProjectBuilder.builder().build()
+        project.tasks.register("fatBinary", FatBinaryTask::class.java).get()
+    }
 
     @Test
     fun fatBinaryWiresFatJarLazilyWithoutRealizingIt() {
