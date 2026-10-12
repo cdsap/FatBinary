@@ -45,11 +45,17 @@ class FatBinaryPluginTest {
             fatBinary.taskDependencies.getDependencies(fatBinary).any { it.name == "fatJar" }
         )
 
-        val fatJar = project.tasks.named("fatJar", Jar::class.java).get()
+        val fatJar = project.tasks.named("fatJar", Jar::class.java)
+        val resolvedFatJar = fatBinary.fatJar.get().asFile
+        assertTrue(
+            "resolving fatBinary.fatJar must realize fatJar only when its value is requested",
+            fatJarConfigured
+        )
+        val realizedFatJar = fatJar.get()
         assertEquals(
             "fatBinary.fatJar must track fatJar.archiveFile through a lazy provider",
-            fatJar.archiveFile.get().asFile,
-            fatBinary.fatJar.get().asFile
+            realizedFatJar.archiveFile.get().asFile,
+            resolvedFatJar
         )
     }
 

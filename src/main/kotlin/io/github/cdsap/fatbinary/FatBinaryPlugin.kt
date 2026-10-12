@@ -41,7 +41,8 @@ class FatBinaryPlugin : Plugin<Project> {
 
                 dependsOn(fatJarProvider)
 
-                this.fatJar.set(fatJarProvider.flatMap { it.archiveFile })
+                val fatJarArchive = fatJarProvider.flatMap { it.archiveFile }
+                this.fatJar.set(fatJarArchive)
                 this.outputFile.set(
                     target.layout.file(
                         target.provider {
