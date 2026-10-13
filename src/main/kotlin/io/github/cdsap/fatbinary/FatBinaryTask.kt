@@ -6,13 +6,13 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
-open class FatBinaryTask : DefaultTask() {
+abstract class FatBinaryTask : DefaultTask() {
 
-    @InputFile
-    val fatJar: RegularFileProperty = project.objects.fileProperty()
+    @get:InputFile
+    abstract val fatJar: RegularFileProperty
 
-    @OutputFile
-    val outputFile: RegularFileProperty = project.objects.fileProperty()
+    @get:OutputFile
+    abstract val outputFile: RegularFileProperty
 
     @TaskAction
     fun buildBinary() {
