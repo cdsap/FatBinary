@@ -24,4 +24,19 @@ class ExecutableBinaryWriterTest {
         assertArrayEquals(bytes, outputFile.readBytes())
         assertTrue(outputFile.canExecute())
     }
+
+    @Test
+    fun writeParentlessRelativePathWritesBytesAndMarksExecutable() {
+        val bytes = byteArrayOf(0x62, 0x69, 0x6E, 0x2F)
+        val outputFile = File("executable-binary-writer-parentless-test")
+
+        try {
+            ExecutableBinaryWriter.write(bytes, outputFile)
+
+            assertArrayEquals(bytes, outputFile.readBytes())
+            assertTrue(outputFile.canExecute())
+        } finally {
+            outputFile.delete()
+        }
+    }
 }
