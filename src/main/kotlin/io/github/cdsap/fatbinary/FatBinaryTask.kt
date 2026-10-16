@@ -16,10 +16,8 @@ abstract class FatBinaryTask : DefaultTask() {
 
     @TaskAction
     fun buildBinary() {
-        val jarBytes = fatJar.get().asFile.readBytes()
-        val binaryBytes = BinaryLauncher.assemble(jarBytes)
-        ExecutableBinaryWriter.write(
-            bytes = binaryBytes,
+        ExecutableBinaryBuilder.build(
+            jarFile = fatJar.get().asFile,
             outputFile = outputFile.get().asFile
         )
     }
