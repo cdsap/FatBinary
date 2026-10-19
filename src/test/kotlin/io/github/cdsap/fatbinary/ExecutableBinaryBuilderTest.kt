@@ -22,7 +22,7 @@ class ExecutableBinaryBuilderTest {
 
         ExecutableBinaryBuilder.build(jarFile, outputFile)
 
-        assertArrayEquals(BinaryLauncher.shellPreamble.toByteArray() + jarBytes, outputFile.readBytes())
+        assertArrayEquals(BinaryAssembler.shellPreamble.toByteArray() + jarBytes, outputFile.readBytes())
         assertTrue(outputFile.canExecute())
     }
 }
