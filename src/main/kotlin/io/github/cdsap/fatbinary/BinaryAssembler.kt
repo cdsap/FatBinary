@@ -1,6 +1,6 @@
 package io.github.cdsap.fatbinary
 
-internal object BinaryLauncher {
+internal object BinaryAssembler {
 
     val shellPreamble: String =
         "#!/bin/sh\n\nexec java \$JAVA_OPTS -jar \$0 \"\$@\"\n\n"
