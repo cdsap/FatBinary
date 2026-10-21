@@ -14,47 +14,51 @@ class FatBinaryPlugin : Plugin<Project> {
         val extension = target.extensions.create("fatBinary", FatBinaryExtension::class.java)
 
         target.pluginManager.withPlugin("java") {
-            val jarProvider = target.tasks.named("jar")
-            val runtimeClasspath = target.configurations.named("runtimeClasspath")
+            configureJavaPlugin(target, extension)
+        }
+    }
 
-            val fatJarProvider = target.tasks.register<Jar>("fatJar") {
-                duplicatesStrategy = DuplicatesStrategy.INCLUDE
-                group = "Build"
-                description = "Produces a fatJar "
+    private fun configureJavaPlugin(project: Project, extension: FatBinaryExtension) {
+        val jarProvider = project.tasks.named("jar")
+        val runtimeClasspath = project.configurations.named("runtimeClasspath")
 
-                dependsOn(jarProvider)
+        val fatJarProvider = project.tasks.register<Jar>("fatJar") {
+            duplicatesStrategy = DuplicatesStrategy.INCLUDE
+            group = "Build"
+            description = "Produces a fatJar "
 
-                manifest {
-                    attributes("Main-Class" to FatBinaryNaming.manifestMainClass(extension.mainClass))
-                }
+            dependsOn(jarProvider)
 
-                inputs.files(runtimeClasspath)
-                from(runtimeClasspath.map { configuration ->
-                    configuration.map { if (it.isDirectory) it else target.zipTree(it) }
-                })
-                with(jarProvider.get() as CopySpec)
+            manifest {
+                attributes("Main-Class" to FatBinaryNaming.manifestMainClass(extension.mainClass))
             }
 
-            target.tasks.register<FatBinaryTask>("fatBinary") {
-                group = "Build"
-                description = "Produces a executable binary"
+            inputs.files(runtimeClasspath)
+            from(runtimeClasspath.map { configuration ->
+                configuration.map { if (it.isDirectory) it else project.zipTree(it) }
+            })
+            with(jarProvider.get() as CopySpec)
+        }
 
-                dependsOn(fatJarProvider)
+        project.tasks.register<FatBinaryTask>("fatBinary") {
+            group = "Build"
+            description = "Produces a executable binary"
 
-                val fatJarArchive = fatJarProvider.flatMap { it.archiveFile }
-                this.fatJar.set(fatJarArchive)
-                this.outputFile.set(
-                    target.layout.file(
-                        target.provider {
-                            FatBinaryOutputFileResolver.resolve(
-                                configuredName = extension.name,
-                                buildDir = target.layout.buildDirectory.get().asFile,
-                                projectName = target.name
-                            )
-                        }
-                    )
+            dependsOn(fatJarProvider)
+
+            val fatJarArchive = fatJarProvider.flatMap { it.archiveFile }
+            this.fatJar.set(fatJarArchive)
+            this.outputFile.set(
+                project.layout.file(
+                    project.provider {
+                        FatBinaryOutputFileResolver.resolve(
+                            configuredName = extension.name,
+                            buildDir = project.layout.buildDirectory.get().asFile,
+                            projectName = project.name
+                        )
+                    }
                 )
-            }
+            )
         }
     }
 }
