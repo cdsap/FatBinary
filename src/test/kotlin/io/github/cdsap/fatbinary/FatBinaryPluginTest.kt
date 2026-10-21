@@ -100,6 +100,15 @@ class FatBinaryPluginTest {
             "fatJar must stay unrealized while configuring fatBinary",
             fatJarConfigured
         )
+
+        assertEquals(
+            "com.example.MainKt",
+            project.tasks.named("fatJar", Jar::class.java).get().manifest.attributes.get("Main-Class")
+        )
+        assertEquals(
+            project.file("binary"),
+            project.tasks.named("fatBinary", FatBinaryTask::class.java).get().outputFile.get().asFile
+        )
     }
 
     @Test
