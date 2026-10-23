@@ -16,7 +16,7 @@ abstract class FatBinaryTask : DefaultTask() {
 
     @TaskAction
     fun buildBinary() {
-        ExecutableBinaryBuilder.build(
+        ExecutableBinaryWriter.materialize(
             jarFile = fatJar.get().asFile,
             outputFile = outputFile.get().asFile
         )
