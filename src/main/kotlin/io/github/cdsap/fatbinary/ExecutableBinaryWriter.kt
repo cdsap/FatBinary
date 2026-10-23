@@ -7,6 +7,14 @@ import java.nio.file.StandardCopyOption
 
 internal object ExecutableBinaryWriter {
 
+    fun materialize(jarFile: File, outputFile: File) {
+        val binaryBytes = BinaryAssembler.assemble(jarFile.readBytes())
+        write(
+            bytes = binaryBytes,
+            outputFile = outputFile
+        )
+    }
+
     fun write(bytes: ByteArray, outputFile: File) {
         outputFile.parentFile?.mkdirs()
 
