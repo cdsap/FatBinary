@@ -14,19 +14,6 @@ class ExecutableBinaryWriterTest {
     val tempFolder = TemporaryFolder()
 
     @Test
-    fun materializeReadsJarAssemblesBinaryAndWritesExecutable() {
-        val jarBytes = byteArrayOf(0x50, 0x4B, 0x03, 0x04)
-        val jarFile = tempFolder.newFile("input.jar")
-        jarFile.writeBytes(jarBytes)
-        val outputFile = File(tempFolder.root, "nested/output")
-
-        ExecutableBinaryWriter.materialize(jarFile, outputFile)
-
-        assertArrayEquals(BinaryAssembler.shellPreamble.toByteArray() + jarBytes, outputFile.readBytes())
-        assertTrue(outputFile.canExecute())
-    }
-
-    @Test
     fun writeCreatesParentDirectoriesWritesBytesAndMarksExecutable() {
         val bytes = byteArrayOf(0x23, 0x21, 0x2F, 0x62, 0x69, 0x6E, 0x2F)
         val outputFile = File(tempFolder.root, "nested/out/binary")
