@@ -1,7 +1,9 @@
 package io.github.cdsap.fatbinary
 
 import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
+import java.io.IOException
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -12,6 +14,19 @@ class ExecutableBinaryWriterTest {
     @Rule
     @JvmField
     val tempFolder = TemporaryFolder()
+
+    @Test
+    fun materializeReadsJarAssemblesBinaryAndWritesExecutable() {
+        val jarBytes = byteArrayOf(0x50, 0x4B, 0x03, 0x04)
+        val jarFile = tempFolder.newFile("input.jar")
+        jarFile.writeBytes(jarBytes)
+        val outputFile = File(tempFolder.root, "nested/output")
+
+        ExecutableBinaryWriter.materialize(jarFile, outputFile)
+
+        assertArrayEquals(BinaryAssembler.shellPreamble.toByteArray() + jarBytes, outputFile.readBytes())
+        assertTrue(outputFile.canExecute())
+    }
 
     @Test
     fun writeCreatesParentDirectoriesWritesBytesAndMarksExecutable() {
@@ -50,6 +65,16 @@ class ExecutableBinaryWriterTest {
             assertTrue(outputFile.canExecute())
         } finally {
             outputFile.delete()
+        }
+    }
+
+    @Test
+    fun writeSurfacesParentDirectoryCreationFailure() {
+        val parentFile = tempFolder.newFile("parent")
+        val outputFile = File(parentFile, "binary")
+
+        assertThrows(IOException::class.java) {
+            ExecutableBinaryWriter.write(byteArrayOf(0x01), outputFile)
         }
     }
 }
