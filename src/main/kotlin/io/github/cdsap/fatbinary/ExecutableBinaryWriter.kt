@@ -6,8 +6,17 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
 internal object ExecutableBinaryWriter {
+    fun materialize(jarFile: File, outputFile: File) {
+        val binaryBytes = BinaryAssembler.assemble(jarFile.readBytes())
+        write(binaryBytes, outputFile)
+    }
+
     fun write(bytes: ByteArray, outputFile: File) {
-        outputFile.parentFile?.mkdirs()
+        outputFile.parentFile?.let { parentDirectory ->
+            if (!parentDirectory.exists() && !parentDirectory.mkdirs()) {
+                throw IOException("Could not create parent directory: $parentDirectory")
+            }
+        }
 
         val outputPath = outputFile.toPath()
         val temporaryPath = Files.createTempFile(
