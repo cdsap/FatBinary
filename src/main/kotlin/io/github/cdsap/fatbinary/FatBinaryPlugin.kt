@@ -2,10 +2,14 @@ package io.github.cdsap.fatbinary
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.NamedDomainObjectProvider
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.CopySpec
 import org.gradle.api.file.DuplicatesStrategy
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.attributes
+import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
 
 class FatBinaryPlugin : Plugin<Project> {
@@ -19,27 +23,41 @@ class FatBinaryPlugin : Plugin<Project> {
     }
 
     private fun configureJavaPlugin(project: Project, extension: FatBinaryExtension) {
-        val jarProvider = project.tasks.named("jar")
+        val jarProvider = project.tasks.named<Jar>("jar")
         val runtimeClasspath = project.configurations.named("runtimeClasspath")
 
-        val fatJarProvider = project.tasks.register<Jar>("fatJar") {
-            duplicatesStrategy = DuplicatesStrategy.INCLUDE
-            group = "Build"
-            description = "Produces a fatJar "
+        val fatJarProvider = registerFatJar(project, extension, jarProvider, runtimeClasspath)
+        registerFatBinary(project, extension, fatJarProvider)
+    }
 
-            dependsOn(jarProvider)
+    private fun registerFatJar(
+        project: Project,
+        extension: FatBinaryExtension,
+        jarProvider: TaskProvider<Jar>,
+        runtimeClasspath: NamedDomainObjectProvider<Configuration>
+    ): TaskProvider<Jar> = project.tasks.register<Jar>("fatJar") {
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+        group = "Build"
+        description = "Produces a fatJar "
 
-            manifest {
-                attributes("Main-Class" to FatBinaryNaming.manifestMainClass(extension.mainClass))
-            }
+        dependsOn(jarProvider)
 
-            inputs.files(runtimeClasspath)
-            from(runtimeClasspath.map { configuration ->
-                configuration.map { if (it.isDirectory) it else project.zipTree(it) }
-            })
-            with(jarProvider.get() as CopySpec)
+        manifest {
+            attributes("Main-Class" to FatBinaryNaming.manifestMainClass(extension.mainClass))
         }
 
+        inputs.files(runtimeClasspath)
+        from(runtimeClasspath.map { configuration ->
+            configuration.map { if (it.isDirectory) it else project.zipTree(it) }
+        })
+        with(jarProvider.get() as CopySpec)
+    }
+
+    private fun registerFatBinary(
+        project: Project,
+        extension: FatBinaryExtension,
+        fatJarProvider: TaskProvider<Jar>
+    ) {
         project.tasks.register<FatBinaryTask>("fatBinary") {
             group = "Build"
             description = "Produces a executable binary"
