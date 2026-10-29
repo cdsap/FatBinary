@@ -3,6 +3,7 @@ package io.github.cdsap.fatbinary
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlin.text.Charsets.US_ASCII
 
 class BinaryAssemblerTest {
 
@@ -18,8 +19,9 @@ class BinaryAssemblerTest {
     fun assemblePrependsPreambleToJarBytes() {
         val jarBytes = byteArrayOf(0x50, 0x4B, 0x03, 0x04)
         val binary = BinaryAssembler.assemble(jarBytes)
+        val expectedPreamble = BinaryAssembler.shellPreamble.toByteArray(US_ASCII)
 
-        val expected = BinaryAssembler.shellPreamble.toByteArray() + jarBytes
-        assertArrayEquals(expected, binary)
+        assertArrayEquals(expectedPreamble, binary.copyOf(expectedPreamble.size))
+        assertArrayEquals(jarBytes, binary.copyOfRange(expectedPreamble.size, binary.size))
     }
 }
