@@ -22,9 +22,8 @@ internal object ExecutableBinaryWriter {
 
         try {
             Files.newOutputStream(temporaryPath).buffered().use { output ->
-                output.write(BinaryAssembler.shellPreamble.toByteArray(Charsets.US_ASCII))
                 jarFile.inputStream().buffered().use { input ->
-                    input.copyTo(output)
+                    BinaryAssembler.assemble(input, output)
                 }
             }
             temporaryPath.toFile().setExecutable(true)
