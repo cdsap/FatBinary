@@ -187,6 +187,43 @@ class FatBinaryPluginTest {
     }
 
     @Test
+    fun fatJarIncludesContentConfiguredOnJarTask() {
+        writeBuildFile(
+            """
+                fatBinary {
+                    mainClass = "com.example.Main"
+                }
+                tasks.named('jar') {
+                    archiveFileName = 'thin.jar'
+                    from('extra-content.txt') {
+                        into 'custom'
+                    }
+                }
+                tasks.named('fatJar') {
+                    archiveFileName = 'fat.jar'
+                }
+            """.trimIndent()
+        )
+        testProjectDir.newFile("extra-content.txt").writeText("content configured on jar")
+
+        val result = GradleRunner.create()
+            .withProjectDir(testProjectDir.root)
+            .withArguments("fatJar")
+            .withPluginClasspath()
+            .build()
+
+        assertTrue("fatJar must still depend on jar", result.task(":jar") != null)
+        JarFile(File(testProjectDir.root, "build/libs/fat.jar")).use { jar ->
+            val entry = jar.getJarEntry("custom/extra-content.txt")
+                ?: error("Expected content configured on jar in fatJar")
+            assertEquals(
+                "content configured on jar",
+                jar.getInputStream(entry).bufferedReader().use { it.readText() }
+            )
+        }
+    }
+
+    @Test
     fun fatJarWritesConfiguredMainClassToManifest() {
         writeBuildFile(
             """
