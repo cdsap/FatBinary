@@ -4,7 +4,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.file.CopySpec
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.tasks.Jar
@@ -50,7 +49,7 @@ class FatBinaryPlugin : Plugin<Project> {
         from(runtimeClasspath.map { configuration ->
             configuration.map { if (it.isDirectory) it else project.zipTree(it) }
         })
-        with(jarProvider.get() as CopySpec)
+        with(jarProvider.get())
     }
 
     private fun registerFatBinary(
