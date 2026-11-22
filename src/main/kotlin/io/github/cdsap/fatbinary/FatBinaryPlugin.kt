@@ -2,8 +2,7 @@ package io.github.cdsap.fatbinary
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.NamedDomainObjectProvider
-import org.gradle.api.artifacts.Configuration
+import org.gradle.api.file.CopySpec
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.tasks.Jar
@@ -25,7 +24,8 @@ class FatBinaryPlugin : Plugin<Project> {
         val jarProvider = project.tasks.named<Jar>("jar")
         val runtimeClasspath = project.configurations.named("runtimeClasspath")
 
-        val fatJarProvider = registerFatJar(project, extension, jarProvider, runtimeClasspath)
+        val contents = FatJarClasspath.contents(project, jarProvider, runtimeClasspath)
+        val fatJarProvider = registerFatJar(project, extension, jarProvider, contents)
         registerFatBinary(project, extension, fatJarProvider)
     }
 
@@ -33,7 +33,7 @@ class FatBinaryPlugin : Plugin<Project> {
         project: Project,
         extension: FatBinaryExtension,
         jarProvider: TaskProvider<Jar>,
-        runtimeClasspath: NamedDomainObjectProvider<Configuration>
+        contents: CopySpec
     ): TaskProvider<Jar> = project.tasks.register<Jar>("fatJar") {
         duplicatesStrategy = DuplicatesStrategy.INCLUDE
         group = "Build"
@@ -45,11 +45,7 @@ class FatBinaryPlugin : Plugin<Project> {
             attributes("Main-Class" to FatBinaryNaming.manifestMainClass(extension.mainClass))
         }
 
-        inputs.files(runtimeClasspath)
-        from(runtimeClasspath.map { configuration ->
-            configuration.map { if (it.isDirectory) it else project.zipTree(it) }
-        })
-        with(jarProvider.get())
+        with(contents)
     }
 
     private fun registerFatBinary(

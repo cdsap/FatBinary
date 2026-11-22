@@ -40,6 +40,25 @@ class FatBinaryPluginTest {
     }
 
     @Test
+    fun fatJarWiresJarLazilyWithoutRealizingIt() {
+        val project = ProjectBuilder.builder().build()
+        project.pluginManager.apply("java")
+        project.pluginManager.apply(FatBinaryPlugin::class.java)
+        project.extensions.getByType(FatBinaryExtension::class.java).mainClass = "com.example.Main"
+
+        var jarConfigured = false
+        project.tasks.named("jar").configure { jarConfigured = true }
+
+        val fatJar = project.tasks.named("fatJar", Jar::class.java).get()
+
+        assertFalse("jar must stay unrealized while configuring fatJar", jarConfigured)
+        assertTrue(
+            "fatJar must remain dependent on jar",
+            fatJar.taskDependencies.getDependencies(fatJar).any { it.name == "jar" }
+        )
+    }
+
+    @Test
     fun fatBinaryWiresFatJarLazilyWithoutRealizingIt() {
         val project = ProjectBuilder.builder().build()
         project.pluginManager.apply("java")
