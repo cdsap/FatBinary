@@ -40,17 +40,16 @@ class FatBinaryIsolatedProjectsTest {
         assertEquals(TaskOutcome.SUCCESS, first.task(":app:fatBinary")?.outcome)
         assertEquals(TaskOutcome.SUCCESS, first.task(":tool:fatBinary")?.outcome)
 
-        // fatJar checks classpath entries with isDirectory while the cache entry is stored, before
-        // :lib:jar exists, so the second run re-configures; reuse is only expected afterwards.
-        runner.build()
-        val third = runner.build()
+        val second = runner.build()
         assertTrue(
-            "Expected configuration cache HIT once outputs exist:\n${third.output}",
-            third.output.contains("Configuration cache entry reused.")
+            "Expected configuration cache HIT on second run:\n${second.output}",
+            second.output.contains("Configuration cache entry reused.")
         )
 
         assertTrue(File(testProjectDir.root, "app/app-binary").canExecute())
         assertTrue(File(testProjectDir.root, "tool/build/tool").canExecute())
+        assertBinaryOutput("app/app-binary", "hello")
+        assertBinaryOutput("tool/build/tool", "tool")
 
         val appFatJar = File(testProjectDir.root, "app/build/libs")
             .listFiles()
@@ -66,6 +65,31 @@ class FatBinaryIsolatedProjectsTest {
                 jar.getEntry("com/example/lib/Greeter.class")
             )
         }
+
+        // Replaying the cache must also work when dependency jars need to be built again.
+        listOf("lib", "app", "tool").forEach {
+            File(testProjectDir.root, "$it/build").deleteRecursively()
+        }
+        File(testProjectDir.root, "app/app-binary").delete()
+        val rebuilt = runner.build()
+        assertTrue(rebuilt.output, rebuilt.output.contains("Configuration cache entry reused."))
+        assertEquals(TaskOutcome.SUCCESS, rebuilt.task(":app:fatBinary")?.outcome)
+        assertEquals(TaskOutcome.SUCCESS, rebuilt.task(":tool:fatBinary")?.outcome)
+        assertBinaryOutput("app/app-binary", "hello")
+        assertBinaryOutput("tool/build/tool", "tool")
+    }
+
+    private fun assertBinaryOutput(path: String, expected: String) {
+        val process = ProcessBuilder(
+            File(System.getProperty("java.home"), "bin/java").absolutePath,
+            "-jar",
+            File(testProjectDir.root, path).absolutePath
+        )
+            .redirectErrorStream(true)
+            .start()
+        val output = process.inputStream.bufferedReader().use { it.readText() }.trim()
+        assertEquals(output, 0, process.waitFor())
+        assertEquals(expected, output)
     }
 
     @Test
