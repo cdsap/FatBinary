@@ -1,5 +1,6 @@
 package io.github.cdsap.fatbinary
 
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
 import org.gradle.jvm.tasks.Jar
@@ -26,6 +27,11 @@ class FatBinaryPluginTest {
     @Test
     fun fatBinaryTaskUsesAbstractGradleManagedProperties() {
         assertTrue(Modifier.isAbstract(FatBinaryTask::class.java.modifiers))
+        for (getterName in listOf("getFatJar", "getOutputFile")) {
+            val getter = FatBinaryTask::class.java.getMethod(getterName)
+            assertTrue("$getterName must be supplied by Gradle", Modifier.isAbstract(getter.modifiers))
+            assertEquals(RegularFileProperty::class.java, getter.returnType)
+        }
         assertTrue(
             FatBinaryTask::class.java.getMethod("getFatJar")
                 .isAnnotationPresent(InputFile::class.java)
