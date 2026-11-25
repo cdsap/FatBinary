@@ -3,6 +3,7 @@ package io.github.cdsap.fatbinary
 import org.gradle.jvm.tasks.Jar
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -15,6 +16,35 @@ class FatJarClasspathTest {
     @Rule
     @JvmField
     val testProjectDir = TemporaryFolder()
+
+    @Test
+    fun mapEntriesPassesDirectoriesThroughWithoutExpandingThem() {
+        val directory = testProjectDir.newFolder("classes.jar")
+
+        val mapped = FatJarClasspath.mapEntries(listOf(directory)) {
+            error("Directory entries must not be expanded")
+        }
+
+        assertSame(directory, mapped.single())
+    }
+
+    @Test
+    fun mapEntriesExpandsNonDirectoriesAndPreservesEntryOrder() {
+        val archive = testProjectDir.newFile("dependency.data")
+        val directory = testProjectDir.newFolder("classes")
+        val missingArchive = File(testProjectDir.root, "missing.jar")
+        val expanded = mutableListOf<File>()
+        val archiveTree = Any()
+        val missingArchiveTree = Any()
+
+        val mapped = FatJarClasspath.mapEntries(listOf(archive, directory, missingArchive)) {
+            expanded.add(it)
+            if (it == archive) archiveTree else missingArchiveTree
+        }
+
+        assertEquals(listOf(archive, missingArchive), expanded)
+        assertEquals(listOf(archiveTree, directory, missingArchiveTree), mapped)
+    }
 
     @Test
     fun contentsExpandArchivesAndDirectoriesAndPreserveJarCopyRules() {
