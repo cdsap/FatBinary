@@ -2,7 +2,6 @@ package io.github.cdsap.fatbinary
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.file.CopySpec
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.tasks.Jar
@@ -16,36 +15,29 @@ class FatBinaryPlugin : Plugin<Project> {
         val extension = target.extensions.create("fatBinary", FatBinaryExtension::class.java)
 
         target.pluginManager.withPlugin("java") {
-            configureJavaPlugin(target, extension)
+            val fatJarProvider = registerFatJar(target, extension)
+            registerFatBinary(target, extension, fatJarProvider)
         }
     }
 
-    private fun configureJavaPlugin(project: Project, extension: FatBinaryExtension) {
+    private fun registerFatJar(project: Project, extension: FatBinaryExtension): TaskProvider<Jar> {
         val jarProvider = project.tasks.named<Jar>("jar")
         val runtimeClasspath = project.configurations.named("runtimeClasspath")
 
         val contents = FatJarClasspath.contents(project, jarProvider, runtimeClasspath)
-        val fatJarProvider = registerFatJar(project, extension, jarProvider, contents)
-        registerFatBinary(project, extension, fatJarProvider)
-    }
+        return project.tasks.register<Jar>("fatJar") {
+            duplicatesStrategy = DuplicatesStrategy.INCLUDE
+            group = "Build"
+            description = "Produces a fatJar "
 
-    private fun registerFatJar(
-        project: Project,
-        extension: FatBinaryExtension,
-        jarProvider: TaskProvider<Jar>,
-        contents: CopySpec
-    ): TaskProvider<Jar> = project.tasks.register<Jar>("fatJar") {
-        duplicatesStrategy = DuplicatesStrategy.INCLUDE
-        group = "Build"
-        description = "Produces a fatJar "
+            dependsOn(jarProvider)
 
-        dependsOn(jarProvider)
+            manifest {
+                attributes("Main-Class" to FatBinaryNaming.manifestMainClass(extension.mainClass))
+            }
 
-        manifest {
-            attributes("Main-Class" to FatBinaryNaming.manifestMainClass(extension.mainClass))
+            with(contents)
         }
-
-        with(contents)
     }
 
     private fun registerFatBinary(
