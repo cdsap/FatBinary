@@ -107,6 +107,10 @@ class FatBinaryPluginTest {
     fun registersTasksWhenFatBinaryIsAppliedBeforeJava() {
         val project = ProjectBuilder.builder().build()
         project.pluginManager.apply(FatBinaryPlugin::class.java)
+
+        assertFalse(project.tasks.names.contains("fatJar"))
+        assertFalse(project.tasks.names.contains("fatBinary"))
+
         project.pluginManager.apply("java")
 
         val extension = project.extensions.getByType(FatBinaryExtension::class.java)
