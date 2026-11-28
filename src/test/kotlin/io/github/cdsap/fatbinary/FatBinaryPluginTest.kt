@@ -1,6 +1,7 @@
 package io.github.cdsap.fatbinary
 
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
 import org.gradle.jvm.tasks.Jar
@@ -16,6 +17,7 @@ import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.lang.reflect.Modifier
 import java.util.jar.JarFile
+import javax.inject.Inject
 
 
 class FatBinaryPluginTest {
@@ -25,11 +27,13 @@ class FatBinaryPluginTest {
     val testProjectDir = TemporaryFolder()
 
     @Test
-    fun fatBinaryTaskUsesAbstractGradleManagedProperties() {
-        assertTrue(Modifier.isAbstract(FatBinaryTask::class.java.modifiers))
+    fun fatBinaryTaskUsesInjectedObjectFactory() {
+        val constructor = FatBinaryTask::class.java.getConstructor(ObjectFactory::class.java)
+        assertTrue(constructor.isAnnotationPresent(Inject::class.java))
+        assertFalse(Modifier.isAbstract(FatBinaryTask::class.java.modifiers))
+        assertFalse(Modifier.isFinal(FatBinaryTask::class.java.modifiers))
         for (getterName in listOf("getFatJar", "getOutputFile")) {
             val getter = FatBinaryTask::class.java.getMethod(getterName)
-            assertTrue("$getterName must be supplied by Gradle", Modifier.isAbstract(getter.modifiers))
             assertEquals(RegularFileProperty::class.java, getter.returnType)
         }
         assertTrue(
@@ -42,7 +46,13 @@ class FatBinaryPluginTest {
         )
 
         val project = ProjectBuilder.builder().build()
-        project.tasks.register("fatBinary", FatBinaryTask::class.java).get()
+        val task = project.tasks.register("fatBinary", FatBinaryTask::class.java).get()
+        val jarFile = project.file("input.jar")
+        val binaryFile = project.file("binary")
+        task.fatJar.set(jarFile)
+        task.outputFile.set(binaryFile)
+        assertEquals(jarFile, task.fatJar.get().asFile)
+        assertEquals(binaryFile, task.outputFile.get().asFile)
     }
 
     @Test
